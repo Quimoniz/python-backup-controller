@@ -73,13 +73,17 @@ def recurse_over_all_filesystem_subentries_entry(path_to_directory):
 def recurse_over_nodes_combine_checksums(my_node):
     if 'directory' == my_node['type']:
         # loop over all the entries
-        chksum = hashlib.md5() # or sha256() at your leisure
+        chksum  = hashlib.md5() # or sha256() at your leisure
+        str_buf = ""
+
         for index in range(0, len(my_node['childNodes'])):
             cur_node = my_node['childNodes'][index]
             if 'file' == cur_node['type']:
-                chksum.update(cur_node['content_checksum'].encode('ascii'))
+                str_buf += cur_node['content_checksum']
             elif 'directory' == cur_node['type']:
-                chksum.update(recurse_over_nodes_combine_checksums(cur_node).encode('ascii'))
+                str_buf += recurse_over_nodes_combine_checksums(cur_node)
+
+        chksum.update(str_buf.encode("ascii"))
         my_node['combined_checksum'] = chksum.hexdigest()
         return my_node['combined_checksum']
 
@@ -241,7 +245,7 @@ def query_dir_list(path_to_directory):
     
     
 
-print(recurse_over_all_filesystem_subentries_entry('/home/zocken/tmp/goethe'))
+print(recurse_over_all_filesystem_subentries_entry('/home/zocken/git/python-backup-controller/foo'))
 
         
 
