@@ -12,6 +12,8 @@
 import hashlib
 import os
 import json
+import sys
+from datetime import datetime
 
 def produce_checksum_for_file(path_to_file):
     """ Takes a file name to read out a file and returns it's md5 checksum """
@@ -244,8 +246,58 @@ def query_dir_list(path_to_directory):
     return dir_list
     
     
+if __name__ == "__main__":
 
-print(recurse_over_all_filesystem_subentries_entry('/home/zocken/git/python-backup-controller/foo'))
+    path_to_backup_folder = None
+
+    # gather arguments/parameters
+    if 1 < len(sys.argv):
+        path_to_backup_folder = sys.argv[1]
+        if 0 < len(path_to_backup_folder) \
+        and not path_to_backup_folder.startswith('/'):
+            path_to_backup_folder = \
+            os.path.relpath(os.path.dirname(path_to_backup_folder)) \
+            + "/" +  os.path.basename(path_to_backup_folder)
+        print('path to backup folder:{}'.format(path_to_backup_folder))
+    else:
+        print('No arguments given. Aborting.')
+        sys.exit(1)
+
+    # TODO: read some configuration file
+    #       might want to read it from ~/.config or ~/.local
+    #       conforming to XDG Desktop/free desktop
+    #       specifications...
+    #       ..also any configuration file inside the script's
+    #         directory takes priority, furthermore any command line
+    #         options take higher priority still...
+
+    # do some basic parameter initialisations
+    simple_name = os.path.basename(path_to_backup_folder)
+    base_path   = os.path.dirname(path_to_backup_folder)
+    base_date   = datetime.today().isoformat()[0:10]
+        
+
+    json_output_file = '{}_scanned_{}.json'.format(simple_name, base_date)
+    if 0 < len(base_path):
+        json_output_file = base_path + '/' + json_output_file
+
+
+    # scan through
+    #   the folder
+    print('Scanning folder "{}"...'.format(path_to_backup_folder))
+    folder_scan = recurse_over_all_filesystem_subentries_entry(path_to_backup_folder)
+    print('..scan complete')
+
+    # save scan
+    with open(json_output_file, 'w') as fh:
+        json.dump(folder_scan, fp=fh, indent='  ')
+
+    if os.path.exists(json_output_file):
+        print('The json output file exists here:{}'.format(json_output_file))
+
+    # TODO: compare to previous backup
+    # TODO: create differential backup
+
 
         
 
